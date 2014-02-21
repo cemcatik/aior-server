@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import com.typesafe.sbteclipse.plugin.EclipsePlugin._
 
 object BuildSettings {
   import Resolvers._
@@ -14,7 +15,8 @@ object BuildSettings {
     version := buildVersion,
     scalaVersion := buildScalaVersion,
     shellPrompt := buildShellPrompt,
-    resolvers := twirperResolvers)
+    resolvers := twirperResolvers,
+    EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource)
 }
 
 object BBRemoteBuild extends Build {
@@ -26,26 +28,17 @@ object BBRemoteBuild extends Build {
   val akkaDeps = Seq(akkaActor, akkaSlf4j)
 
   val logback  = "ch.qos.logback" % "logback-classic" % "1.0.13"
-  val commonsIo = "commons-io" % "commons-io" % "2.4"
-  val commonsCodec = "commons-codec" % "commons-codec" % "1.8"
-  val bouncyCastle = "org.bouncycastle" % "bcprov-jdk16" % "1.46"
-  val sprayCan = "io.spray" % "spray-can" % "1.2-M8" 
-  val play = "play" %% "play" % "2.1.5"
   val gson = "com.google.code.gson" % "gson" % "2.2.4"
   val deps = List(
       logback,
-      commonsIo,
-      commonsCodec,
-      bouncyCastle,
-      sprayCan,
-      play,
       gson
       ) ++ akkaDeps
 
   lazy val project = Project(
     id = "bbremote",
     base = file("."),
-    settings = buildSettings ++ Seq(libraryDependencies ++= deps))
+    settings = buildSettings ++ Seq(libraryDependencies ++= deps)
+  )
 }
 
 // Shell prompt which show the current project,
@@ -76,9 +69,6 @@ object ShellPrompt {
 
 object Resolvers {
   val typesafe = "typesafe" at "http://repo.typesafe.com/typesafe/repo"
-  val couchbase = "couchbase" at "http://files.couchbase.com/maven2"
-  val twitter4j = "twitter4j.org" at "http://twitter4j.org/maven2"
-  val spray = "spray" at "http://repo.spray.io"
 
-  val twirperResolvers = Seq(typesafe, couchbase, twitter4j, spray)
+  val twirperResolvers = Seq(typesafe)
 }
