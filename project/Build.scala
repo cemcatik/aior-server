@@ -31,13 +31,15 @@ object BBRemoteBuild extends Build {
   val bouncyCastle = "org.bouncycastle" % "bcprov-jdk16" % "1.46"
   val sprayCan = "io.spray" % "spray-can" % "1.2-M8" 
   val play = "play" %% "play" % "2.1.5"
+  val gson = "com.google.code.gson" % "gson" % "2.2.4"
   val deps = List(
       logback,
       commonsIo,
       commonsCodec,
       bouncyCastle,
       sprayCan,
-      play
+      play,
+      gson
       ) ++ akkaDeps
 
   lazy val project = Project(

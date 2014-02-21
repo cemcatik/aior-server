@@ -38,7 +38,8 @@ class Main extends Actor with ActorLogging with Config {
     }
   }
   
-  import Aioc._
+  import Messages._
+  import Messages.Aioc._
   
   def bound(socket: ActorRef): Receive = LoggingReceive {
     case Received(Aioc(ConnectionReceived), remote) => {
@@ -53,45 +54,11 @@ class Main extends Actor with ActorLogging with Config {
     case Received(m, remote) => log.debug("received unhandled {} from {}", m.utf8String, remote)
   }
   
-  object Aioc {
-    val ConnectionReceived = 0
-    val MouseLeftPress     = 56
-    val MouseLeftRelease   = 57
-    val MouseRightPress    = 58
-    val MouseRightRelease  = 59
-    
-    val AiocPattern = """\{type:'aioc',id:(\d+)\}""".r
-    def unapply(bytes: ByteString): Option[Int] = {
-      bytes.utf8String match {
-        case AiocPattern(id) => Some(id.toInt)
-        case _ => None
-      }
-    }
-  }
-  
   val UdpConnectionAccepted: ByteString = {
     val osName = System getProperty "os.name"
     val osVersion = System getProperty "os.version"
     val osArch = System getProperty "os.arch"
-
-    ByteString("""
-          |{
-          |  "sender": "server",
-          |  "status": "acceptUpdConnection",
-          |  "statusMessage": "${osName}-${osVersion}-${osArch}",
-          |  "type": "cs"
-          |}
-      """.stripMargin)
-  }
-  
-  object MoveMouse {
-    val MoveMousePattern = """\{type:'mmb',x:(-?\d+),y:(-?\d+)\}""".r
-    def unapply(bytes: ByteString): Option[(Int, Int)] = {
-      bytes.utf8String match {
-        case MoveMousePattern(x, y) => Some((x.toInt, y.toInt))
-        case _ => None
-      }
-    }
+    ConnStatus("server", "acceptUdpConnection", "${osName}-${osVersion}-${osArch}")
   }
   
   def moveMouseDelta(dx: Int, dy: Int) {
