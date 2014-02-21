@@ -11,8 +11,8 @@ object Messages {
     val `type`: String
   }
   case class Aioc(id: Int, `type`: String = "aioc") extends Message
-  case class MoveMouse(x: Int, y: Int, `type`: String = "mmb") extends Message
   case class ConnStatus(sender: String, status: String, statusMessage: String, `type`: String = "cs") extends Message
+  case class MoveMouse(x: Int, y: Int, `type`: String = "mmb") extends Message
   
   val gson = new Gson
   
@@ -29,6 +29,8 @@ object Messages {
     val MouseLeftRelease   = 57
     val MouseRightPress    = 58
     val MouseRightRelease  = 59
+    val MouseWheelDown     = 60
+    val MouseWheelUp       = 61
     
     def unapply(bytes: ByteString): Option[Int] = Try(gson.fromJson(bytes.utf8String, classOf[Aioc])) match {
       case Success(Aioc(id, "aioc")) => Some(id)

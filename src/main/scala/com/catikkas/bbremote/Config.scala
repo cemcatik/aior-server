@@ -7,5 +7,6 @@ trait Config {
 
   val config = context.system.settings.config.getConfig("bbremote")
   val port = config.getInt("port")
-  val mouseSpeed = config.getDouble("mouseSpeed") 
+  val mouseSpeed = config.getDouble("mouseSpeed")
+  val mouseWheelSpeed = config.getDouble("mouseWheelSpeed")
 }

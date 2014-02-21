@@ -4,6 +4,7 @@ import akka.actor._
 import akka.event.LoggingReceive
 import java.awt.MouseInfo
 import java.awt.{ Robot => AwtRobot }
+import java.awt.event.InputEvent
 
 class Robot extends Actor with ActorLogging with Config {
   import Robot._
@@ -13,9 +14,10 @@ class Robot extends Actor with ActorLogging with Config {
   var y = 0
   
   def receive = LoggingReceive {
-    case MoveMouseDelta(x, y) => moveMouseDelta(x, y)
-    case MousePress(button)   => robot.mousePress(button)
-    case MouseRelease(button) => robot.mouseRelease(button)
+    case MoveMouseDelta(x, y)  => moveMouseDelta(x, y)
+    case MousePress(button)    => robot.mousePress(button)
+    case MouseRelease(button)  => robot.mouseRelease(button)
+    case MouseWheel(direction) => mouseWheel(direction)
   }
   
   def moveMouseDelta(dx: Int, dy: Int) {
@@ -34,6 +36,11 @@ class Robot extends Actor with ActorLogging with Config {
     val scaled = math.round(da * mouseSpeed).intValue
     a + scaled
   }
+
+  def mouseWheel(direction: Int) {
+    val scaled = math.round(direction * mouseWheelSpeed).intValue
+    robot.mouseWheel(scaled)
+  }
 }
 
 object Robot {
@@ -42,4 +49,10 @@ object Robot {
   case class MoveMouseDelta(x: Int, y: Int)
   case class MousePress(mask: Int)
   case class MouseRelease(mask: Int)
+  case class MouseWheel(direction: Int)
+
+  val MouseLeftButton = InputEvent.BUTTON1_DOWN_MASK
+  val MouseRightButton = InputEvent.BUTTON3_DOWN_MASK
+  val WheelDirectionUp = -1
+  val WheelDirectionDown = 1
 }
