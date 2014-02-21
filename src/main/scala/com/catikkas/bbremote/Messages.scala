@@ -16,6 +16,13 @@ object Messages {
   
   val gson = new Gson
   
+  val UdpConnectionAccepted: ByteString = {
+    val osName = System getProperty "os.name"
+    val osVersion = System getProperty "os.version"
+    val osArch = System getProperty "os.arch"
+    ConnStatus("server", "acceptUdpConnection", "${osName}-${osVersion}-${osArch}")
+  }
+
   object Aioc {
     val ConnectionReceived = 0
     val MouseLeftPress     = 56

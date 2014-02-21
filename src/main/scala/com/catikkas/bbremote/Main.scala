@@ -50,11 +50,4 @@ class Main extends Actor with ActorLogging with Config {
     case Received(Aioc(MouseRightRelease), _) => robot ! MouseRelease(InputEvent.BUTTON3_DOWN_MASK)
     case Received(m, remote) => log.debug("received unhandled {} from {}", m.utf8String, remote)
   }
-  
-  val UdpConnectionAccepted: ByteString = {
-    val osName = System getProperty "os.name"
-    val osVersion = System getProperty "os.version"
-    val osArch = System getProperty "os.arch"
-    ConnStatus("server", "acceptUdpConnection", "${osName}-${osVersion}-${osArch}")
-  }
 }
