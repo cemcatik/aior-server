@@ -1,27 +1,23 @@
 package com.catikkas.bbremote
-
-import java.awt.MouseInfo
-import java.awt.Robot
+import java.awt.event.InputEvent
 import java.net.InetSocketAddress
+
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.io
 import akka.io._
 import akka.io.Udp._
 import akka.util.ByteString
-import java.awt.event.InputEvent
-import javax.swing.SwingUtilities
 
 class Main extends Actor with ActorLogging with Config {
   
   import context.system
   
-  val robot = new Robot
-  var x: Int = _
-  var y: Int = _
+  var robot = system.deadLetters
   
   override def preStart() {
     io.IO(Udp) ! Bind(self, new InetSocketAddress(port))
+    robot = system.actorOf(Robot.props, "robot")
   }
   
   def receive = notBound
@@ -40,17 +36,18 @@ class Main extends Actor with ActorLogging with Config {
   
   import Messages._
   import Messages.Aioc._
+  import Robot._
   
   def bound(socket: ActorRef): Receive = LoggingReceive {
     case Received(Aioc(ConnectionReceived), remote) => {
       log.info("connection attempt from {}", remote)
       socket ! Send(UdpConnectionAccepted, remote)
     }
-    case Received(MoveMouse(x, y), _)         => moveMouseDelta(x, y)
-    case Received(Aioc(MouseLeftPress), _)    => mouseLeftPress
-    case Received(Aioc(MouseLeftRelease), _)  => mouseLeftRelease
-    case Received(Aioc(MouseRightPress), _)   => mouseRightPress
-    case Received(Aioc(MouseRightRelease), _) => mouseRightRelease
+    case Received(MoveMouse(x, y), _)         => robot ! MoveMouseDelta(x, y)
+    case Received(Aioc(MouseLeftPress), _)    => robot ! MousePress(InputEvent.BUTTON1_DOWN_MASK)
+    case Received(Aioc(MouseLeftRelease), _)  => robot ! MouseRelease(InputEvent.BUTTON1_DOWN_MASK)
+    case Received(Aioc(MouseRightPress), _)   => robot ! MousePress(InputEvent.BUTTON3_DOWN_MASK)
+    case Received(Aioc(MouseRightRelease), _) => robot ! MouseRelease(InputEvent.BUTTON3_DOWN_MASK)
     case Received(m, remote) => log.debug("received unhandled {} from {}", m.utf8String, remote)
   }
   
@@ -59,38 +56,5 @@ class Main extends Actor with ActorLogging with Config {
     val osVersion = System getProperty "os.version"
     val osArch = System getProperty "os.arch"
     ConnStatus("server", "acceptUdpConnection", "${osName}-${osVersion}-${osArch}")
-  }
-  
-  def moveMouseDelta(dx: Int, dy: Int) {
-    val pointerInfo = MouseInfo.getPointerInfo
-    if (pointerInfo == null) {
-      robot.mouseMove(x, y)
-    } else {
-      val point = pointerInfo.getLocation
-      x = point.x
-      y = point.y
-      robot.mouseMove(newLocation(x, dx), newLocation(y, dy))
-    }
-  }
-  
-  def newLocation(a: Int, da: Int): Int = {
-    val scaled = math.round(da * mouseSpeed).intValue
-    a + scaled
-  }
-  
-  def mouseLeftPress {
-    robot.mousePress(InputEvent.BUTTON1_DOWN_MASK)
-  }
-  
-  def mouseLeftRelease {
-    robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK)
-  }
-  
-  def mouseRightPress {
-    robot.mousePress(InputEvent.BUTTON3_DOWN_MASK)
-  }
-  
-  def mouseRightRelease {
-    robot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK)
   }
 }
