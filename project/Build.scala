@@ -23,15 +23,17 @@ object BBRemoteBuild extends Build {
   import BuildSettings._
   
   val akkaVer = "2.2.3"
-  val akkaActor = "com.typesafe.akka"  %% "akka-actor" % akkaVer
-  val akkaSlf4j = "com.typesafe.akka"  %% "akka-slf4j" % akkaVer
+  val akkaActor = "com.typesafe.akka" %% "akka-actor" % akkaVer
+  val akkaSlf4j = "com.typesafe.akka" %% "akka-slf4j" % akkaVer
   val akkaDeps = Seq(akkaActor, akkaSlf4j)
 
-  val logback  = "ch.qos.logback" % "logback-classic" % "1.0.13"
-  val gson = "com.google.code.gson" % "gson" % "2.2.4"
+  val logback  = "ch.qos.logback"       % "logback-classic" % "1.0.13"
+  val gson     = "com.google.code.gson" % "gson"            % "2.2.4"
+  val specs    = "org.specs2"          %% "specs2"          % "2.3.8" % "test"
   val deps = List(
       logback,
-      gson
+      gson,
+      specs
       ) ++ akkaDeps
 
   lazy val project = Project(
