@@ -44,14 +44,15 @@ class Main extends Actor with ActorLogging with Config {
       log.info("connection attempt from {}", remote)
       socket ! Send(UdpConnectionAccepted, new InetSocketAddress(remote.getAddress, port))
     }
-    case Received(MouseMove(x, y), _)         => robot ! MouseMoveDelta(x, y)
-    case Received(Aioc(MouseLeftPress), _)    => robot ! MousePress(MouseLeftButton)
-    case Received(Aioc(MouseLeftRelease), _)  => robot ! MouseRelease(MouseLeftButton)
-    case Received(Aioc(MouseRightPress), _)   => robot ! MousePress(MouseRightButton)
+    case Received(MouseMove(x, y),         _) => robot ! MouseMoveDelta(x, y)
+    case Received(Aioc(MouseLeftPress),    _) => robot ! MousePress(MouseLeftButton)
+    case Received(Aioc(MouseLeftRelease),  _) => robot ! MouseRelease(MouseLeftButton)
+    case Received(Aioc(MouseRightPress),   _) => robot ! MousePress(MouseRightButton)
     case Received(Aioc(MouseRightRelease), _) => robot ! MouseRelease(MouseRightButton)
-    case Received(Aioc(MouseWheelDown), _)    => robot ! MouseWheel(WheelDirectionDown)
-    case Received(Aioc(MouseWheelUp), _)      => robot ! MouseWheel(WheelDirectionUp)
-    case Received(KeyboardString(chars), _)   => robot ! PressKeys(chars)
+    case Received(Aioc(MouseWheelDown),    _) => robot ! MouseWheel(WheelDirectionDown)
+    case Received(Aioc(MouseWheelUp),      _) => robot ! MouseWheel(WheelDirectionUp)
+    case Received(KeyboardString(chars),   _) => robot ! PressKeys(chars)
+    case Received(KeyboardInt(int),        _) => robot ! PressKey(int)
     case Received(m, remote) => log.debug("received unhandled {} from {}", m.utf8String, remote)
   }
 }

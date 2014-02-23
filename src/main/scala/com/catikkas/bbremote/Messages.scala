@@ -15,6 +15,7 @@ object Messages {
   case class ConnStatus(sender: String, status: String, statusMessage: String, `type`: String = "cs") extends Message
   case class MouseMove(x: Int, y: Int, `type`: String = "mmb") extends Message
   case class KeyboardString(letter: String, state: Int = 3, `type`: String = "ksb") extends Message
+  case class KeyboardInt(letter: Int, state: Int = 1, `type`: String = "kib")
   
   val gson = new Gson
   
@@ -75,6 +76,13 @@ object Messages {
       }
 
       split(kbs, Seq()) map charOrSpecial
+    }
+  }
+
+  object KeyboardInt {
+    def unapply(bytes: ByteString): Option[Int] = Try(gson.fromJson(bytes.utf8String, classOf[KeyboardInt])) match {
+      case Success(KeyboardInt(kib, 1, "kib")) => Some(kib)
+      case _ => None
     }
   }
 
