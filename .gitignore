@@ -5,3 +5,6 @@
 bin
 target
 project/project
+.history
+.idea/
+.idea_modules/
