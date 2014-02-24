@@ -34,6 +34,9 @@ object Settings {
     "-language:implicitConversions",
     "-language:postfixOps"
   )
+
+  val distJvmOptions = "-Xms8M -Xmx8M -Xss1M -XX:MaxPermSize=32M -XX:+UseParallelGC"
+  val distBootClass  = "com.catikkas.bbremote.Main"
 }
 
 object BBRemoteBuild extends Build {
@@ -61,6 +64,10 @@ object BBRemoteBuild extends Build {
     EclipseKeys.withSource := true
   )
   .settings(distSettings: _*)
+  .settings(
+    distJvmOptions in Dist := Settings.distJvmOptions,
+    distBootClass  in Dist := Settings.distBootClass
+  )
 }
 
 // Shell prompt which show the current project,
