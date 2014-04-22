@@ -25,7 +25,7 @@ class MessagesTest extends Specification {
       keys.mkString must_== "-"
     }
     
-    "parse - in multiple keyss" in {
+    "parse - in multiple keys" in {
       val KeyboardString(keys) = ByteString("""{type:'ksb',state:3,letter:'F-----o'}""")
       keys.mkString must_== "F-o"
     }
