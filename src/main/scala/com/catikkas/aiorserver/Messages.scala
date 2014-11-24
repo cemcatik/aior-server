@@ -1,4 +1,4 @@
-package com.catikkas.bbremote
+package com.catikkas.aiorserver
 
 import com.google.gson.Gson
 import akka.util.ByteString

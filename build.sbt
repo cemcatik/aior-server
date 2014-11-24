@@ -4,13 +4,13 @@ import akka.sbt.AkkaKernelPlugin._
 
 organization := "com.catikkas"
 
-name := "bbremote"
+name := "aior-server"
 
 versionWithGit
 
 git.baseVersion := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.4"
 
 shellPrompt := ShellPrompt.prompt
 
@@ -31,4 +31,4 @@ distSettings
 
 distJvmOptions in Dist := "-Xms8M -Xmx8M -Xss1M -XX:MaxPermSize=32M -XX:+UseParallelGC"
 
-distBootClass in Dist := "com.catikkas.bbremote.Main"
+distBootClass in Dist := "com.catikkas.aiorserver.Main"

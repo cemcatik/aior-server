@@ -1,4 +1,4 @@
-package com.catikkas.bbremote
+package com.catikkas.aiorserver
 
 import java.net.InetSocketAddress
 

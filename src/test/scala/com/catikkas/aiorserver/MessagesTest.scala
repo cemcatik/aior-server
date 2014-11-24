@@ -1,4 +1,4 @@
-package com.catikkas.bbremote
+package com.catikkas.aiorserver
 
 import org.specs2.mutable._
 import org.specs2.runner.JUnitRunner
