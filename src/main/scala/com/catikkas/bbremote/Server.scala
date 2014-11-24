@@ -13,7 +13,7 @@ class Server extends Actor with ActorLogging with Config {
 
   var robot = system.deadLetters
 
-  override def preStart() {
+  override def preStart(): Unit = {
     io.IO(Udp) ! Bind(self, new InetSocketAddress(port))
     robot = context.actorOf(Robot.props, "robot")
   }

@@ -25,7 +25,7 @@ class Robot extends Actor with ActorLogging with Config {
     case PressKey(int)          => pressKey(int)
   }
   
-  def mouseMoveDelta(dx: Int, dy: Int) {
+  def mouseMoveDelta(dx: Int, dy: Int): Unit = {
     def newLocation(a: Int, da: Int): Int = {
       val scaled = math.round(da * mouseSpeed).intValue
       a + scaled
@@ -42,14 +42,14 @@ class Robot extends Actor with ActorLogging with Config {
     }
   }
   
-  def mouseWheel(direction: Int) {
+  def mouseWheel(direction: Int): Unit = {
     val scaled = math.round(direction * mouseWheelSpeed).intValue
     robot.mouseWheel(scaled)
   }
 
   def pressKeys(chars: Seq[Char]) = chars map Keyboard.keyStroke foreach perform
 
-  def perform(keystroke: KeyStroke) {
+  def perform(keystroke: KeyStroke): Unit = {
     val keycode = keystroke.getKeyCode
     val isShift = (keystroke.getModifiers & InputEvent.SHIFT_MASK) != 0
 
@@ -65,7 +65,7 @@ class Robot extends Actor with ActorLogging with Config {
     }
   }
 
-  def pressKey(int: Int) {
+  def pressKey(int: Int): Unit = {
     int2keycode(int) match {
       case KeyEvent.VK_SHIFT => shiftPressed = true
       case x => {
@@ -103,9 +103,9 @@ class Robot extends Actor with ActorLogging with Config {
     52 -> KeyEvent.VK_X,
     53 -> KeyEvent.VK_Y,
     54 -> KeyEvent.VK_Z,
-    7  -> KeyEvent.VK_0,
-    8  -> KeyEvent.VK_1,
-    9  -> KeyEvent.VK_2,
+     7 -> KeyEvent.VK_0,
+     8 -> KeyEvent.VK_1,
+     9 -> KeyEvent.VK_2,
     10 -> KeyEvent.VK_3,
     11 -> KeyEvent.VK_4,
     12 -> KeyEvent.VK_5,
