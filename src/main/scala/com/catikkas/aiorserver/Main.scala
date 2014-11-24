@@ -7,7 +7,7 @@ class Main extends Bootable {
   val system = ActorSystem("aior-server")
 
   def startup = {
-    system.actorOf(Props[Server], "server")
+    system.actorOf(Server.props, "server")
   }
 
   def shutdown = {

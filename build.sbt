@@ -1,6 +1,3 @@
-import com.typesafe.sbt.SbtGit._
-import akka.sbt.AkkaKernelPlugin._
-
 organization    := "com.catikkas"
 name            := "aior-server"
 versionWithGit
@@ -29,6 +26,5 @@ libraryDependencies ++= Seq(
   "org.specs2" %% "specs2-junit" % specs2Ver % "test"
 )
 
-distSettings
-distJvmOptions in Dist := "-Xms8M -Xmx8M -Xss1M -XX:MaxPermSize=32M -XX:+UseParallelGC"
-distBootClass  in Dist := "com.catikkas.aiorserver.Main"
+enablePlugins(AkkaAppPackaging)
+mainClass in Compile := Some("com.catikkas.aiorserver.Main")

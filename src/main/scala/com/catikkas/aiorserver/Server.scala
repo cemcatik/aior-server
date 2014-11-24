@@ -53,3 +53,7 @@ class Server extends Actor with ActorLogging with Config {
     case Received(m, remote) => log.debug("received unhandled {} from {}", m.utf8String, remote)
   }
 }
+
+object Server {
+  def props = Props(new Server)
+}
