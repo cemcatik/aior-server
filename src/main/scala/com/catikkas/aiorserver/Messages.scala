@@ -15,7 +15,7 @@ object Messages {
   case class ConnStatus(sender: String, status: String, statusMessage: String, `type`: String = "cs") extends Message
   case class MouseMove(x: Int, y: Int, `type`: String = "mmb") extends Message
   case class KeyboardString(letter: String, state: Int = 3, `type`: String = "ksb") extends Message
-  case class KeyboardInt(letter: Int, state: Int = 1, `type`: String = "kib")
+  case class KeyboardInt(letter: Int, state: Int = 1, `type`: String = "kib") extends Message
   
   val gson = new Gson
   
