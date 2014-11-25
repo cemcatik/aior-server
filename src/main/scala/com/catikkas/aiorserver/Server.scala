@@ -4,7 +4,6 @@ import java.net.InetSocketAddress
 
 import akka.actor._
 import akka.event.LoggingReceive
-import akka.io
 import akka.io._
 import akka.io.Udp._
 
@@ -14,7 +13,7 @@ class Server extends Actor with ActorLogging with Config {
   var robot = system.deadLetters
 
   override def preStart(): Unit = {
-    io.IO(Udp) ! Bind(self, new InetSocketAddress(port))
+    IO(Udp) ! Bind(self, new InetSocketAddress(port))
     robot = context.actorOf(Robot.props, "robot")
   }
 
