@@ -27,7 +27,7 @@ class Robot extends Actor with ActorLogging with Config {
   
   def mouseMoveDelta(dx: Int, dy: Int): Unit = {
     def newLocation(a: Int, da: Int): Int = {
-      val scaled = math.round(da * mouseSpeed).intValue
+      val scaled = math.round(da * config.mouseSpeed).intValue
       a + scaled
     }
 
@@ -43,7 +43,7 @@ class Robot extends Actor with ActorLogging with Config {
   }
   
   def mouseWheel(direction: Int): Unit = {
-    val scaled = math.round(direction * mouseWheelSpeed).intValue
+    val scaled = math.round(direction * config.mouseWheelSpeed).intValue
     robot.mouseWheel(scaled)
   }
 
