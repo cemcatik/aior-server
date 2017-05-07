@@ -2,8 +2,6 @@ import sbt._
 import com.typesafe.sbt.SbtGit._
 
 object ShellPrompt {
-  def color(c: String, s: String) = c + s + scala.Console.RESET
-
   val prompt: State => String = { state =>
     val extracted = Project.extract(state)
     val name    = extracted get Keys.name
@@ -11,9 +9,13 @@ object ShellPrompt {
     val branch  = extracted get GitKeys.gitCurrentBranch
 
     "%s:%s %s> ".format (
-      color(scala.Console.YELLOW, name),
+      name.colored(scala.Console.YELLOW),
       version,
-      color(scala.Console.RED, s"[$branch]")
+      s"[$branch]".colored(scala.Console.RED)
     )
+  }
+
+  implicit class ColorOpts(val s: String) extends AnyVal {
+    def colored(c: String): String = c + s + scala.Console.RESET
   }
 }
