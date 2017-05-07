@@ -20,9 +20,9 @@ class Server extends Actor with ActorLogging with Config {
   def receive = notBound
 
   def notBound: Receive = LoggingReceive {
-    case CommandFailed => {
+    case CommandFailed(_) => {
       log.error("failed to bind")
-      context stop self
+      context.system.terminate()
     }
     case Bound(local) => {
       log.info("server started on {}", local.getPort)
