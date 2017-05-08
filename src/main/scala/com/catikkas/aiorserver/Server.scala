@@ -17,9 +17,9 @@ class Server extends Actor with ActorLogging with Config {
     robot = context.actorOf(Robot.props, "robot")
   }
 
-  def receive = notBound
+  def receive: Receive = notBound
 
-  def notBound = LoggingReceive.withLabel("notBound") {
+  def notBound: Receive = LoggingReceive.withLabel("notBound") {
     case CommandFailed(_) =>
       log.error("failed to bind")
       context stop self
@@ -34,14 +34,19 @@ class Server extends Actor with ActorLogging with Config {
   import Messages.AiocId._
   import Robot._
 
-  def bound(socket: ActorRef) = LoggingReceive.withLabel("bound") {
+  def bound(socket: ActorRef): Receive = LoggingReceive.withLabel("bound") {
     case Received(Aioc(ConnectionReceived), remote) =>
       log.info("connection attempt from {}", remote)
       socket ! Send(UdpConnectionAccepted.toJson, new InetSocketAddress(remote.getAddress, config.port))
-      context become connected(remote)
+      context become connected(socket, remote)
   }
 
-  def connected(remote: InetSocketAddress) = LoggingReceive.withLabel(s"connected $remote") {
+  def connected(socket: ActorRef, remote: InetSocketAddress): Receive = LoggingReceive.withLabel(s"connected $remote") {
+    case c @ Received(Aioc(ConnectionReceived), _) =>
+      // Pretty much drop existing connected client and accept requests only from new client
+      context become bound(socket)
+      self forward c
+
     case Received(MouseMove(x, y), `remote`)         => robot ! MouseMoveDelta(x, y)
     case Received(Aioc(MouseLeftPress), `remote`)    => robot ! MousePress(MouseButton.Left)
     case Received(Aioc(MouseLeftRelease), `remote`)  => robot ! MouseRelease(MouseButton.Left)
