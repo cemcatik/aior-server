@@ -71,11 +71,10 @@ class Robot extends Actor with ActorLogging with Config {
   def pressKey(int: Int): Unit = {
     int2keycode(int) match {
       case KeyEvent.VK_SHIFT => shiftPressed = true
-      case x => {
+      case x =>
         val modifiers = if (shiftPressed) InputEvent.SHIFT_MASK else 0
         perform(KeyStroke.getKeyStroke(x, modifiers))
         shiftPressed = false
-      }
     }
   }
 

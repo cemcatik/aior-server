@@ -62,11 +62,10 @@ object Messages {
           s indexOf "--" match {
             case -1 => acc :+ s
             case 0  => split(s.substring(3), acc :+ "-")
-            case x => {
+            case x =>
               val l    = s.substring(0, x)
               val rest = s.substring(x + 2)
               split(rest, acc :+ l)
-            }
           }
         }
 
@@ -97,13 +96,14 @@ object Messages {
   }
 
   implicit val gson: Gson = {
-    val maf = RuntimeTypeAdapterFactory
-      .of(classOf[Message], "type")
-      .registerSubtype(classOf[Aioc], "aioc")
-      .registerSubtype(classOf[ConnStatus], "cs")
-      .registerSubtype(classOf[MouseMove], "mmb")
+    // format: off
+    val maf = RuntimeTypeAdapterFactory.of(classOf[Message], "type")
+      .registerSubtype(classOf[Aioc],           "aioc")
+      .registerSubtype(classOf[ConnStatus],     "cs")
+      .registerSubtype(classOf[MouseMove],      "mmb")
       .registerSubtype(classOf[KeyboardString], "ksb")
-      .registerSubtype(classOf[KeyboardInt], "kib")
+      .registerSubtype(classOf[KeyboardInt],    "kib")
+    // format: on
 
     new GsonBuilder()
       .registerTypeAdapterFactory(maf)

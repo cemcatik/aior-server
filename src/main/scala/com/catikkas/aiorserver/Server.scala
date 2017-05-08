@@ -9,9 +9,7 @@ import akka.io.Udp._
 
 @SuppressWarnings(Array("org.wartremover.warts.Var"))
 class Server extends Actor with ActorLogging with Config {
-  import context.system
-
-  var robot = system.deadLetters
+  var robot = context.system.deadLetters
 
   override def preStart(): Unit = {
     IO(Udp) ! Bind(self, new InetSocketAddress(config.port))
@@ -21,15 +19,14 @@ class Server extends Actor with ActorLogging with Config {
   def receive = notBound
 
   def notBound: Receive = LoggingReceive.withLabel("notBound") {
-    case CommandFailed(_) => {
+    case CommandFailed(_) =>
       log.error("failed to bind")
       context stop self
-    }
-    case Bound(local) => {
+
+    case Bound(local) =>
       log.info("server started on {}", local.getPort)
       val socket = sender
       context become bound(socket)
-    }
   }
 
   import Messages._
@@ -37,10 +34,10 @@ class Server extends Actor with ActorLogging with Config {
   import Robot._
 
   def bound(socket: ActorRef): Receive = LoggingReceive.withLabel("bound") {
-    case Received(Aioc(ConnectionReceived), remote) => {
+    case Received(Aioc(ConnectionReceived), remote) =>
       log.info("connection attempt from {}", remote)
       socket ! Send(UdpConnectionAccepted.toJson, new InetSocketAddress(remote.getAddress, config.port))
-    }
+
     case Received(MouseMove(x, y), _)         => robot ! MouseMoveDelta(x, y)
     case Received(Aioc(MouseLeftPress), _)    => robot ! MousePress(MouseButton.Left)
     case Received(Aioc(MouseLeftRelease), _)  => robot ! MouseRelease(MouseButton.Left)
