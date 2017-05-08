@@ -39,3 +39,15 @@ wartremoverErrors in (Test, compileIncremental) := (wartremoverErrors in (Compil
   Wart.NonUnitStatements,
   Wart.Product
 )
+
+enablePlugins(JavaAppPackaging)
+javaOptions in Universal ++= Seq(
+  // -J params will be added as jvm parameters
+  "-J-client",
+  "-J-XX:+UseG1GC",
+  "-J-XX:MaxGCPauseMillis=50",
+  "-J-Xmx8m",
+  "-J-Xms8m",
+  // others will be added as app parameters
+  "-Dakka.loglevel=INFO"
+)
