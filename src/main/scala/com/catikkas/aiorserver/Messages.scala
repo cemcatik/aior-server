@@ -11,7 +11,7 @@ import scala.util._
 object Messages {
 
   sealed trait Message
-  case class Aioc(id: Int) extends Message
+  case class Aioc(id: AiocId) extends Message
   case class ConnStatus(sender: String, status: String, statusMessage: String) extends Message
   case class MouseMove(x: Int, y: Int) extends Message
   case class KeyboardString(letter: String, state: Int = KeyboardString.State) extends Message
@@ -24,16 +24,22 @@ object Messages {
     ConnStatus("server", "acceptUdpConnection", s"$osName-$osVersion-$osArch")
   }
 
-  object Aioc {
-    val ConnectionReceived = 0
-    val MouseLeftPress     = 56
-    val MouseLeftRelease   = 57
-    val MouseRightPress    = 58
-    val MouseRightRelease  = 59
-    val MouseWheelDown     = 60
-    val MouseWheelUp       = 61
+  case class AiocId(underlying: Int) extends AnyVal
+  object AiocId {
+    // Preferring `val X = AiocId(x)` instead of `object X extends AiocId(x)`
+    // because when the id is deserialized, Gson creates a new instance through reflection
+    // and pattern matching don't work
+    val ConnectionReceived = AiocId(0)
+    val MouseLeftPress     = AiocId(56)
+    val MouseLeftRelease   = AiocId(57)
+    val MouseRightPress    = AiocId(58)
+    val MouseRightRelease  = AiocId(59)
+    val MouseWheelDown     = AiocId(60)
+    val MouseWheelUp       = AiocId(61)
+  }
 
-    def unapply(bytes: ByteString): Option[Int] = bytes.parseJson[Aioc] match {
+  object Aioc {
+    def unapply(bytes: ByteString): Option[AiocId] = bytes.parseJson[Aioc] match {
       case Success(Aioc(id)) => Some(id)
       case _ => None
     }

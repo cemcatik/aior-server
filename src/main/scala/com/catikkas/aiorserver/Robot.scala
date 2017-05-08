@@ -18,9 +18,9 @@ class Robot extends Actor with ActorLogging with Config {
   
   def receive = LoggingReceive {
     case MouseMoveDelta(dx, dy) => mouseMoveDelta(dx, dy)
-    case MousePress(button)     => robot.mousePress(button)
-    case MouseRelease(button)   => robot.mouseRelease(button)
-    case MouseWheel(direction)  => mouseWheel(direction)
+    case MousePress(button)     => robot.mousePress(button.mask)
+    case MouseRelease(button)   => robot.mouseRelease(button.mask)
+    case MouseWheel(direction)  => mouseWheel(direction.d)
     case PressKeys(keys)        => pressKeys(keys)
     case PressKey(int)          => pressKey(int)
   }
@@ -135,16 +135,23 @@ object Robot {
   def props = Props(new Robot)
   
   case class MouseMoveDelta(dx: Int, dy: Int)
-  case class MousePress(mask: Int)
-  case class MouseRelease(mask: Int)
-  case class MouseWheel(direction: Int)
+  case class MousePress(button: MouseButton)
+  case class MouseRelease(button: MouseButton)
+  case class MouseWheel(direction: WheelDirection)
   case class PressKeys(chars: Seq[Char])
   case class PressKey(int: Int)
 
-  val MouseLeftButton = InputEvent.BUTTON1_DOWN_MASK
-  val MouseRightButton = InputEvent.BUTTON3_DOWN_MASK
-  val WheelDirectionUp = -1
-  val WheelDirectionDown = 1
+  sealed abstract class MouseButton(val mask: Int)
+  object MouseButton {
+    object Left  extends MouseButton(InputEvent.BUTTON1_DOWN_MASK)
+    object Right extends MouseButton(InputEvent.BUTTON3_DOWN_MASK)
+  }
+
+  sealed abstract class WheelDirection(val d: Int)
+  object WheelDirection {
+    object Up   extends WheelDirection(-1)
+    object Down extends WheelDirection(1)
+  }
 }
 
 object Keyboard {
