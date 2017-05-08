@@ -38,7 +38,7 @@ class Server extends Actor with ActorLogging with Config {
   def bound(socket: ActorRef): Receive = LoggingReceive {
     case Received(Aioc(ConnectionReceived), remote) => {
       log.info("connection attempt from {}", remote)
-      socket ! Send(UdpConnectionAccepted, new InetSocketAddress(remote.getAddress, config.port))
+      socket ! Send(UdpConnectionAccepted.toJson, new InetSocketAddress(remote.getAddress, config.port))
     }
     case Received(MouseMove(x, y),         _) => robot ! MouseMoveDelta(x, y)
     case Received(Aioc(MouseLeftPress),    _) => robot ! MousePress(MouseLeftButton)

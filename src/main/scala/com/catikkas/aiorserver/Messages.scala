@@ -19,11 +19,11 @@ object Messages {
   
   val gson = new Gson
   
-  val UdpConnectionAccepted: ByteString = {
+  val UdpConnectionAccepted: Message = {
     val osName = System getProperty "os.name"
     val osVersion = System getProperty "os.version"
     val osArch = System getProperty "os.arch"
-    ConnStatus("server", "acceptUdpConnection", "${osName}-${osVersion}-${osArch}")
+    ConnStatus("server", "acceptUdpConnection", s"$osName-$osVersion-$osArch")
   }
 
   object Aioc {
@@ -86,5 +86,7 @@ object Messages {
     }
   }
 
-  implicit def message2Json(m: Message): ByteString = ByteString(gson.toJson(m))
+  implicit class MessageOps(val m: Message) extends AnyVal {
+    def toJson = ByteString(gson.toJson(m))
+  }
 }
