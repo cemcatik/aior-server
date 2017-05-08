@@ -40,16 +40,16 @@ class Server extends Actor with ActorLogging with Config {
       log.info("connection attempt from {}", remote)
       socket ! Send(UdpConnectionAccepted.toJson, new InetSocketAddress(remote.getAddress, config.port))
     }
-    case Received(MouseMove(x, y),         _) => robot ! MouseMoveDelta(x, y)
-    case Received(Aioc(MouseLeftPress),    _) => robot ! MousePress(MouseButton.Left)
-    case Received(Aioc(MouseLeftRelease),  _) => robot ! MouseRelease(MouseButton.Left)
-    case Received(Aioc(MouseRightPress),   _) => robot ! MousePress(MouseButton.Right)
+    case Received(MouseMove(x, y), _)         => robot ! MouseMoveDelta(x, y)
+    case Received(Aioc(MouseLeftPress), _)    => robot ! MousePress(MouseButton.Left)
+    case Received(Aioc(MouseLeftRelease), _)  => robot ! MouseRelease(MouseButton.Left)
+    case Received(Aioc(MouseRightPress), _)   => robot ! MousePress(MouseButton.Right)
     case Received(Aioc(MouseRightRelease), _) => robot ! MouseRelease(MouseButton.Right)
-    case Received(Aioc(MouseWheelDown),    _) => robot ! MouseWheel(WheelDirection.Down)
-    case Received(Aioc(MouseWheelUp),      _) => robot ! MouseWheel(WheelDirection.Up)
-    case Received(KeyboardString(chars),   _) => robot ! PressKeys(chars)
-    case Received(KeyboardInt(int),        _) => robot ! PressKey(int)
-    case Received(m, remote) => log.debug("received unhandled {} from {}", m.utf8String, remote)
+    case Received(Aioc(MouseWheelDown), _)    => robot ! MouseWheel(WheelDirection.Down)
+    case Received(Aioc(MouseWheelUp), _)      => robot ! MouseWheel(WheelDirection.Up)
+    case Received(KeyboardString(chars), _)   => robot ! PressKeys(chars)
+    case Received(KeyboardInt(int), _)        => robot ! PressKey(int)
+    case Received(m, remote)                  => log.debug("received unhandled {} from {}", m.utf8String, remote)
   }
 }
 

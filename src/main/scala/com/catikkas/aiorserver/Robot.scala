@@ -3,19 +3,21 @@ package com.catikkas.aiorserver
 import akka.actor._
 import akka.event.LoggingReceive
 import java.awt.MouseInfo
-import java.awt.{ Robot => AwtRobot }
+import java.awt.{Robot => AwtRobot}
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
 class Robot extends Actor with ActorLogging with Config {
   import Robot._
-  
+
   val robot = new AwtRobot
+
   var x = 0
   var y = 0
+
   var shiftPressed = false
-  
+
   def receive = LoggingReceive {
     case MouseMoveDelta(dx, dy) => mouseMoveDelta(dx, dy)
     case MousePress(button)     => robot.mousePress(button.mask)
@@ -24,7 +26,7 @@ class Robot extends Actor with ActorLogging with Config {
     case PressKeys(keys)        => pressKeys(keys)
     case PressKey(int)          => pressKey(int)
   }
-  
+
   def mouseMoveDelta(dx: Int, dy: Int): Unit = {
     def newLocation(a: Int, da: Int): Int = {
       val scaled = math.round(da * config.mouseSpeed).intValue
@@ -41,7 +43,7 @@ class Robot extends Actor with ActorLogging with Config {
       robot.mouseMove(newLocation(x, dx), newLocation(y, dy))
     }
   }
-  
+
   def mouseWheel(direction: Int): Unit = {
     val scaled = math.round(direction * config.mouseWheelSpeed).intValue
     robot.mouseWheel(scaled)
@@ -103,9 +105,9 @@ class Robot extends Actor with ActorLogging with Config {
     52 -> KeyEvent.VK_X,
     53 -> KeyEvent.VK_Y,
     54 -> KeyEvent.VK_Z,
-     7 -> KeyEvent.VK_0,
-     8 -> KeyEvent.VK_1,
-     9 -> KeyEvent.VK_2,
+    7  -> KeyEvent.VK_0,
+    8  -> KeyEvent.VK_1,
+    9  -> KeyEvent.VK_2,
     10 -> KeyEvent.VK_3,
     11 -> KeyEvent.VK_4,
     12 -> KeyEvent.VK_5,
@@ -133,7 +135,7 @@ class Robot extends Actor with ActorLogging with Config {
 
 object Robot {
   def props = Props(new Robot)
-  
+
   case class MouseMoveDelta(dx: Int, dy: Int)
   case class MousePress(button: MouseButton)
   case class MouseRelease(button: MouseButton)
@@ -155,9 +157,11 @@ object Robot {
 }
 
 object Keyboard {
+  // format: off
   val Numbers = ('0' to '9') map { c => c -> KeyStroke.getKeyStroke(c, 0) } toMap
   val LowerAZ = ('a' to 'z') map { c => c -> KeyStroke.getKeyStroke(c.toUpper, 0) } toMap
   val UpperAZ = ('A' to 'Z') map { c => c -> KeyStroke.getKeyStroke(c, InputEvent.SHIFT_MASK) } toMap
+  // format: on
   val Whitespaces = Map(
     '\n' -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
     '\t' -> KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0),
@@ -165,7 +169,7 @@ object Keyboard {
     ' '  -> KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0)
   )
   val Layout = io.Source.fromURL(Robot.getClass().getResource("/keyboards/US"), "UTF-8").getLines map { l =>
-    val c = l charAt 0
+    val c    = l charAt 0
     val spec = l substring 2
     c -> KeyStroke.getKeyStroke(spec)
   } toMap

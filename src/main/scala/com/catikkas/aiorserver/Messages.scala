@@ -11,16 +11,16 @@ import scala.util._
 object Messages {
 
   sealed trait Message
-  case class Aioc(id: AiocId) extends Message
+  case class Aioc(id: AiocId)                                                  extends Message
   case class ConnStatus(sender: String, status: String, statusMessage: String) extends Message
-  case class MouseMove(x: Int, y: Int) extends Message
+  case class MouseMove(x: Int, y: Int)                                         extends Message
   case class KeyboardString(letter: String, state: Int = KeyboardString.State) extends Message
-  case class KeyboardInt(letter: Int, state: Int = KeyboardInt.State) extends Message
+  case class KeyboardInt(letter: Int, state: Int = KeyboardInt.State)          extends Message
 
   val UdpConnectionAccepted: Message = {
-    val osName = System getProperty "os.name"
+    val osName    = System getProperty "os.name"
     val osVersion = System getProperty "os.version"
-    val osArch = System getProperty "os.arch"
+    val osArch    = System getProperty "os.arch"
     ConnStatus("server", "acceptUdpConnection", s"$osName-$osVersion-$osArch")
   }
 
@@ -41,14 +41,14 @@ object Messages {
   object Aioc {
     def unapply(bytes: ByteString): Option[AiocId] = bytes.parseJson[Aioc] match {
       case Success(Aioc(id)) => Some(id)
-      case _ => None
+      case _                 => None
     }
   }
 
   object MouseMove {
     def unapply(bytes: ByteString): Option[(Int, Int)] = bytes.parseJson[MouseMove] match {
       case Success(MouseMove(x, y)) => Some((x, y))
-      case _ => None
+      case _                        => None
     }
   }
 
@@ -62,8 +62,8 @@ object Messages {
           s indexOf "--" match {
             case -1 => acc :+ s
             case 0  => split(s.substring(3), acc :+ "-")
-            case x  => {
-              val l = s.substring(0, x)
+            case x => {
+              val l    = s.substring(0, x)
               val rest = s.substring(x + 2)
               split(rest, acc :+ l)
             }
@@ -82,7 +82,7 @@ object Messages {
 
       bytes.parseJson[KeyboardString] match {
         case Success(KeyboardString(kbs, KeyboardString.State)) => Some(split(kbs))
-        case _ => None
+        case _                                                  => None
       }
     }
   }
@@ -92,24 +92,25 @@ object Messages {
 
     def unapply(bytes: ByteString): Option[Int] = bytes.parseJson[KeyboardInt] match {
       case Success(KeyboardInt(kbi, KeyboardString.State)) => Some(kbi)
-      case _ => None
+      case _                                               => None
     }
   }
 
   implicit val gson: Gson = {
-    val maf = RuntimeTypeAdapterFactory.of(classOf[Message], "type")
-      .registerSubtype(classOf[Aioc],           "aioc")
-      .registerSubtype(classOf[ConnStatus],     "cs")
-      .registerSubtype(classOf[MouseMove],      "mmb")
+    val maf = RuntimeTypeAdapterFactory
+      .of(classOf[Message], "type")
+      .registerSubtype(classOf[Aioc], "aioc")
+      .registerSubtype(classOf[ConnStatus], "cs")
+      .registerSubtype(classOf[MouseMove], "mmb")
       .registerSubtype(classOf[KeyboardString], "ksb")
-      .registerSubtype(classOf[KeyboardInt],    "kib")
+      .registerSubtype(classOf[KeyboardInt], "kib")
 
     new GsonBuilder()
       .registerTypeAdapterFactory(maf)
       .create()
   }
 
-  type Reads[T] = (ByteString => Try[T])
+  type Reads[T]  = (ByteString => Try[T])
   type Writes[T] = (T => ByteString)
 
   implicit def messageReads[T <: Message](implicit t: ClassTag[T], gson: Gson): Reads[T] = { bs =>
@@ -120,7 +121,7 @@ object Messages {
       gson.fromJson(bs.utf8String, classOf[Message])
     }.flatMap {
       case m: T => Success(m)
-      case f => Failure(new MatchError(f))
+      case f    => Failure(new MatchError(f))
     }
   }
 
