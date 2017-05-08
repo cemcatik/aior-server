@@ -7,6 +7,7 @@ import akka.event.LoggingReceive
 import akka.io._
 import akka.io.Udp._
 
+@SuppressWarnings(Array("org.wartremover.warts.Var"))
 class Server extends Actor with ActorLogging with Config {
   import context.system
 
@@ -22,7 +23,7 @@ class Server extends Actor with ActorLogging with Config {
   def notBound: Receive = LoggingReceive.withLabel("notBound") {
     case CommandFailed(_) => {
       log.error("failed to bind")
-      context.system.terminate()
+      context stop self
     }
     case Bound(local) => {
       log.info("server started on {}", local.getPort)

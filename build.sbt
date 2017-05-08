@@ -8,10 +8,8 @@ git.useGitDescribe := true
 shellPrompt := ShellPrompt.prompt
 
 scalaVersion := "2.12.2"
-scalacOptions := Seq(
-  "-feature",
-  "-language:implicitConversions",
-  "-language:postfixOps"
+scalacOptions ++= Seq(
+  "-feature"
 )
 
 def akka(c: String)   = "com.typesafe.akka" %% s"akka-$c"   % "2.5.1"
@@ -22,7 +20,22 @@ libraryDependencies ++= Seq(
   akka("slf4j"),
   "ch.qos.logback"       % "logback-classic" % "1.2.3",
   "com.google.code.gson" % "gson"            % "2.3.1",
+  //
   // Test libraries
   specs2("core")  % Test,
   specs2("junit") % Test
+)
+
+wartremoverErrors in (Compile, compile) ++= Warts.allBut(
+  Wart.DefaultArguments,
+  Wart.ImplicitParameter,
+  Wart.Any,
+  Wart.Nothing,
+  Wart.Overloading,
+  Wart.PublicInference,
+  Wart.Equals
+)
+wartremoverErrors in (Test, compileIncremental) := (wartremoverErrors in (Compile, compile)).value diff Seq(
+  Wart.NonUnitStatements,
+  Wart.Product
 )

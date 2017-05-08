@@ -8,6 +8,7 @@ import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
+@SuppressWarnings(Array("org.wartremover.warts.Var"))
 class Robot extends Actor with ActorLogging with Config {
   import Robot._
 
@@ -136,12 +137,13 @@ class Robot extends Actor with ActorLogging with Config {
 object Robot {
   def props = Props(new Robot)
 
-  case class MouseMoveDelta(dx: Int, dy: Int)
-  case class MousePress(button: MouseButton)
-  case class MouseRelease(button: MouseButton)
-  case class MouseWheel(direction: WheelDirection)
-  case class PressKeys(chars: Seq[Char])
-  case class PressKey(int: Int)
+  sealed trait Command
+  final case class MouseMoveDelta(dx: Int, dy: Int)      extends Command
+  final case class MousePress(button: MouseButton)       extends Command
+  final case class MouseRelease(button: MouseButton)     extends Command
+  final case class MouseWheel(direction: WheelDirection) extends Command
+  final case class PressKeys(chars: Seq[Char])           extends Command
+  final case class PressKey(int: Int)
 
   sealed abstract class MouseButton(val mask: Int)
   object MouseButton {
@@ -158,9 +160,9 @@ object Robot {
 
 object Keyboard {
   // format: off
-  val Numbers = ('0' to '9') map { c => c -> KeyStroke.getKeyStroke(c, 0) } toMap
-  val LowerAZ = ('a' to 'z') map { c => c -> KeyStroke.getKeyStroke(c.toUpper, 0) } toMap
-  val UpperAZ = ('A' to 'Z') map { c => c -> KeyStroke.getKeyStroke(c, InputEvent.SHIFT_MASK) } toMap
+  val Numbers = ('0' to '9').map { c => c -> KeyStroke.getKeyStroke(c, 0) }.toMap
+  val LowerAZ = ('a' to 'z').map { c => c -> KeyStroke.getKeyStroke(c.toUpper, 0) }.toMap
+  val UpperAZ = ('A' to 'Z').map { c => c -> KeyStroke.getKeyStroke(c, InputEvent.SHIFT_MASK) }.toMap
   // format: on
   val Whitespaces = Map(
     '\n' -> KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0),
@@ -168,11 +170,15 @@ object Keyboard {
     '\b' -> KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0),
     ' '  -> KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0)
   )
-  val Layout = io.Source.fromURL(Robot.getClass().getResource("/keyboards/US"), "UTF-8").getLines map { l =>
-    val c    = l charAt 0
-    val spec = l substring 2
-    c -> KeyStroke.getKeyStroke(spec)
-  } toMap
+  val Layout = io.Source
+    .fromURL(Robot.getClass().getResource("/keyboards/US"), "UTF-8")
+    .getLines
+    .map { l =>
+      val c    = l charAt 0
+      val spec = l substring 2
+      c -> KeyStroke.getKeyStroke(spec)
+    }
+    .toMap
   val KeyStrokes = Numbers ++ LowerAZ ++ UpperAZ ++ Whitespaces ++ Layout
 
   def keyStroke(c: Char): KeyStroke = KeyStrokes(c)

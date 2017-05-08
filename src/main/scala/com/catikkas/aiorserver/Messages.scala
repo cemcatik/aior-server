@@ -11,11 +11,11 @@ import scala.util._
 object Messages {
 
   sealed trait Message
-  case class Aioc(id: AiocId)                                                  extends Message
-  case class ConnStatus(sender: String, status: String, statusMessage: String) extends Message
-  case class MouseMove(x: Int, y: Int)                                         extends Message
-  case class KeyboardString(letter: String, state: Int = KeyboardString.State) extends Message
-  case class KeyboardInt(letter: Int, state: Int = KeyboardInt.State)          extends Message
+  final case class Aioc(id: AiocId)                                                  extends Message
+  final case class ConnStatus(sender: String, status: String, statusMessage: String) extends Message
+  final case class MouseMove(x: Int, y: Int)                                         extends Message
+  final case class KeyboardString(letter: String, state: Int = KeyboardString.State) extends Message
+  final case class KeyboardInt(letter: Int, state: Int = KeyboardInt.State)          extends Message
 
   val UdpConnectionAccepted: Message = {
     val osName    = System getProperty "os.name"
@@ -24,7 +24,7 @@ object Messages {
     ConnStatus("server", "acceptUdpConnection", s"$osName-$osVersion-$osArch")
   }
 
-  case class AiocId(underlying: Int) extends AnyVal
+  final case class AiocId(underlying: Int) extends AnyVal
   object AiocId {
     // Preferring `val X = AiocId(x)` instead of `object X extends AiocId(x)`
     // because when the id is deserialized, Gson creates a new instance through reflection
