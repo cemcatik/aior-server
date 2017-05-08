@@ -7,19 +7,23 @@ import akka.event.LoggingReceive
 import akka.io._
 import akka.io.Udp._
 
-@SuppressWarnings(Array("org.wartremover.warts.Var"))
-class Server extends Actor with ActorLogging with Config {
-  var robot = context.system.deadLetters
+class Server(robot: ActorRef) extends Actor with ActorLogging with Config {
+  import Server._
 
   override def preStart(): Unit = {
-    import context.system
-    IO(Udp) ! Bind(self, new InetSocketAddress(config.port))
-    robot = context.actorOf(Robot.props, "robot")
+    self ! Initialize
   }
 
-  def receive: Receive = notBound
+  def receive: Receive = notInitialized
 
-  def notBound: Receive = LoggingReceive.withLabel("notBound") {
+  def notInitialized: Receive = LoggingReceive.withLabel("notInitialized") {
+    case Initialize =>
+      import context.system
+      IO(Udp) ! Bind(self, new InetSocketAddress(config.port))
+      context become initialized
+  }
+
+  def initialized: Receive = LoggingReceive.withLabel("initialized") {
     case CommandFailed(_) =>
       log.error("failed to bind")
       context stop self
@@ -41,7 +45,7 @@ class Server extends Actor with ActorLogging with Config {
       context become connected(socket, remote)
   }
 
-  def connected(socket: ActorRef, remote: InetSocketAddress): Receive = LoggingReceive.withLabel(s"connected $remote") {
+  def connected(socket: ActorRef, remote: InetSocketAddress) = LoggingReceive.withLabel(s"connected $remote") {
     case c @ Received(Aioc(ConnectionReceived), _) =>
       // Pretty much drop existing connected client and accept requests only from new client
       context become bound(socket)
@@ -61,5 +65,8 @@ class Server extends Actor with ActorLogging with Config {
 }
 
 object Server {
-  def props = Props(new Server)
+  def props(robot: ActorRef) = Props(new Server(robot))
+
+  sealed trait Command
+  final case object Initialize extends Command
 }
