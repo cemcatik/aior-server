@@ -34,5 +34,23 @@ class MessagesTest extends Specification {
       val KeyboardString(keys) = ByteString("""{type:'ksb',state:3,letter:'C--e--m--space--C--a--t'}""")
       keys.mkString must_== "Cem Cat"
     }
+
+    "only parse as ksb" in {
+      ByteString("""{type:'ksb',state:3,letter:'F'}""") match {
+        case KeyboardInt(_) => failure
+        case KeyboardString(Seq('F')) => success
+        case _ => failure
+      }
+    }
+  }
+
+  "mouse move" should {
+    "only parse ask mmb" in {
+      ByteString("""{type:'mmb',x:509,y:531}""") match {
+        case Aioc(_) => failure
+        case MouseMove(509, 531) => success
+        case _ => failure
+      }
+    }
   }
 }

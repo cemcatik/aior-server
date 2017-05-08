@@ -19,7 +19,7 @@ class Server extends Actor with ActorLogging with Config {
 
   def receive = notBound
 
-  def notBound: Receive = LoggingReceive {
+  def notBound: Receive = LoggingReceive.withLabel("notBound") {
     case CommandFailed(_) => {
       log.error("failed to bind")
       context.system.terminate()
@@ -35,7 +35,7 @@ class Server extends Actor with ActorLogging with Config {
   import Messages.Aioc._
   import Robot._
 
-  def bound(socket: ActorRef): Receive = LoggingReceive {
+  def bound(socket: ActorRef): Receive = LoggingReceive.withLabel("bound") {
     case Received(Aioc(ConnectionReceived), remote) => {
       log.info("connection attempt from {}", remote)
       socket ! Send(UdpConnectionAccepted.toJson, new InetSocketAddress(remote.getAddress, config.port))
