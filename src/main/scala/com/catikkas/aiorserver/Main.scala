@@ -5,7 +5,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     import akka.actor._
     val system = ActorSystem("aior-server")
-    val _      = system.actorOf(Supervisor.props, "sup")
+    discarding { system.actorOf(Supervisor.props, "sup") }
   }
 
 }
@@ -24,17 +24,21 @@ class Supervisor extends Actor with ActorLogging {
 
   def notInitialized: Receive = LoggingReceive.withLabel("notInitialized") {
     case Initialize =>
-      val robot  = context.actorOf(Robot.props, "robot")
-      val server = context.actorOf(Server.props(robot), "server")
-      val _      = context watch server
+      val robot  = context watch context.actorOf(Robot.props, "robot")
+      val server = context watch context.actorOf(Server.props(robot), "server")
       context become initialized(robot, server)
   }
 
   def initialized(robot: ActorRef, server: ActorRef): Receive = LoggingReceive.withLabel("initialized") {
+    case Terminated(`robot`) =>
+      log.error("java.awt.Robot terminated. Please make sure environment is not headless.")
+      log.error("Shutting down now.")
+      discarding { context.system.terminate() }
+
     case Terminated(`server`) =>
       log.error("Server failed to bind. Please check config.")
       log.error("Shutting down now.")
-      val _ = context.system.terminate()
+      discarding { context.system.terminate() }
   }
 }
 

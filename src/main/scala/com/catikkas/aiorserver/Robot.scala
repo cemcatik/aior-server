@@ -2,8 +2,7 @@ package com.catikkas.aiorserver
 
 import akka.actor._
 import akka.event.LoggingReceive
-import java.awt.MouseInfo
-import java.awt.{Robot => AwtRobot}
+import java.awt.{AWTException, MouseInfo, Robot => AwtRobot}
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
@@ -12,14 +11,30 @@ import javax.swing.KeyStroke
 class Robot extends Actor with ActorLogging with Config {
   import Robot._
 
-  val robot = new AwtRobot
-
   var x = 0
   var y = 0
 
   var shiftPressed = false
 
-  def receive = LoggingReceive {
+  override def preStart(): Unit = {
+    self ! Initialize
+  }
+
+  def receive = notInitialized
+
+  def notInitialized = LoggingReceive.withLabel("notInitialized") {
+    case Initialize =>
+      try {
+        val robot = new AwtRobot
+        context become initialized(robot)
+      } catch {
+        case e: AWTException =>
+          log.error(e, "Unable to initialize java.awt.Robot")
+          context stop self
+      }
+  }
+
+  def initialized(implicit robot: AwtRobot) = LoggingReceive.withLabel("initialized") {
     case MouseMoveDelta(dx, dy) => mouseMoveDelta(dx, dy)
     case MousePress(button)     => robot.mousePress(button.mask)
     case MouseRelease(button)   => robot.mouseRelease(button.mask)
@@ -28,7 +43,7 @@ class Robot extends Actor with ActorLogging with Config {
     case PressKey(int)          => pressKey(int)
   }
 
-  def mouseMoveDelta(dx: Int, dy: Int): Unit = {
+  def mouseMoveDelta(dx: Int, dy: Int)(implicit robot: AwtRobot): Unit = {
     def newLocation(a: Int, da: Int): Int = {
       val scaled = math.round(da * config.mouseSpeed).intValue
       a + scaled
@@ -45,14 +60,14 @@ class Robot extends Actor with ActorLogging with Config {
     }
   }
 
-  def mouseWheel(direction: Int): Unit = {
+  def mouseWheel(direction: Int)(implicit robot: AwtRobot): Unit = {
     val scaled = math.round(direction * config.mouseWheelSpeed).intValue
     robot.mouseWheel(scaled)
   }
 
-  def pressKeys(chars: Seq[Char]) = chars map Keyboard.keyStroke foreach perform
+  def pressKeys(chars: Seq[Char])(implicit robot: AwtRobot) = chars map Keyboard.keyStroke foreach perform
 
-  def perform(keystroke: KeyStroke): Unit = {
+  def perform(keystroke: KeyStroke)(implicit robot: AwtRobot): Unit = {
     val keycode = keystroke.getKeyCode
     val isShift = (keystroke.getModifiers & InputEvent.SHIFT_MASK) != 0
 
@@ -68,7 +83,7 @@ class Robot extends Actor with ActorLogging with Config {
     }
   }
 
-  def pressKey(int: Int): Unit = {
+  def pressKey(int: Int)(implicit robot: AwtRobot): Unit = {
     int2keycode(int) match {
       case KeyEvent.VK_SHIFT => shiftPressed = true
       case x =>
@@ -137,6 +152,7 @@ object Robot {
   def props = Props(new Robot)
 
   sealed trait Command
+  final case object Initialize                           extends Command
   final case class MouseMoveDelta(dx: Int, dy: Int)      extends Command
   final case class MousePress(button: MouseButton)       extends Command
   final case class MouseRelease(button: MouseButton)     extends Command
