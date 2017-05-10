@@ -4,11 +4,11 @@ import com.typesafe.sbt.SbtGit._
 object ShellPrompt {
   val prompt: State => String = { state =>
     val extracted = Project.extract(state)
-    val name    = extracted get Keys.name
-    val version = extracted get GitKeys.baseVersion
-    val branch  = extracted get GitKeys.gitCurrentBranch
+    val name      = extracted get Keys.name
+    val version   = extracted get GitKeys.baseVersion
+    val branch    = extracted get GitKeys.gitCurrentBranch
 
-    "%s:%s %s> ".format (
+    "%s:%s %s> ".format(
       name.colored(scala.Console.YELLOW),
       version,
       s"[$branch]".colored(scala.Console.RED)
