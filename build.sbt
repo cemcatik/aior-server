@@ -17,6 +17,7 @@ def specs2(c: String) = "org.specs2"        %% s"specs2-$c" % "3.8.9"
 
 libraryDependencies ++= Seq(
   akka("actor"),
+  akka("stream"),
   akka("slf4j"),
   "ch.qos.logback"       % "logback-classic" % "1.2.3",
   "com.google.code.gson" % "gson"            % "2.3.1",
