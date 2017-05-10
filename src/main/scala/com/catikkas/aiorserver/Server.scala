@@ -41,7 +41,7 @@ class Server(robot: ActorRef) extends Actor with ActorLogging with Config {
   def bound(socket: ActorRef): Receive = LoggingReceive.withLabel("bound") {
     case Received(Aioc(ConnectionReceived), remote) =>
       log.info("connection attempt from {}", remote)
-      socket ! Send(UdpConnectionAccepted.toJson, new InetSocketAddress(remote.getAddress, config.port))
+      socket ! Send(UdpConnectionAccepted.toJson, remote)
       context become connected(socket, remote)
   }
 
