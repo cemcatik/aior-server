@@ -1,19 +1,37 @@
 package com.catikkas.aiorserver
 
-object Main {
-
-  def main(args: Array[String]): Unit = {
-    import akka.actor._
-    val system = ActorSystem("aior-server")
-    discarding { system.actorOf(Supervisor.props, "sup") }
-  }
-
-}
+import java.util.Scanner
 
 import akka.actor._
 import akka.event.LoggingReceive
 
+import scala.collection.JavaConverters._
+import scala.concurrent._
+import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext.Implicits.global
+
+
+object Main {
+
+  def main(args: Array[String]): Unit = {
+    implicit val system: ActorSystem = ActorSystem("aior-server")
+    discarding { system.actorOf(Supervisor.props, "sup") }
+
+    system.log.info("Use Ctrl+D to stop.")
+    discarding { new Scanner(System.in).asScala.find(_ == null) }
+    Await.result(terminate(), Duration.Inf)
+  }
+
+  def terminate()(implicit ec: ExecutionContext, system: ActorSystem): Future[Unit] = {
+    system.log.info("Shutting down now.")
+
+    CoordinatedShutdown(system).run().map(_ => ())(ec)
+  }
+
+}
+
 class Supervisor extends Actor with ActorLogging {
+  import context.system
   import Supervisor._
 
   override def preStart(): Unit = {
@@ -32,13 +50,11 @@ class Supervisor extends Actor with ActorLogging {
   def initialized(robot: ActorRef, server: ActorRef): Receive = LoggingReceive.withLabel("initialized") {
     case Terminated(`robot`) =>
       log.error("java.awt.Robot terminated. Please make sure environment is not headless.")
-      log.error("Shutting down now.")
-      discarding { context.system.terminate() }
+      discarding { Main.terminate() }
 
     case Terminated(`server`) =>
       log.error("Server failed to bind. Please check config.")
-      log.error("Shutting down now.")
-      discarding { context.system.terminate() }
+      discarding { Main.terminate() }
   }
 }
 
