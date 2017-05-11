@@ -2,14 +2,11 @@ package com.catikkas.aiorserver
 
 import java.util._
 
-import akka.Done
 import akka.actor._
 import akka.event.LoggingReceive
 import akka.pattern._
-import akka.stream._
-import akka.stream.scaladsl._
 
-import scala.collection.JavaConverters._
+import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
@@ -28,6 +25,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
  * This actor sets up a stream listening to StdIn. Once user hits `Ctrl+D` the StdIn stream
  * completes. This actor can be death-watched, and when it's terminated you can initiate
  * shutdown.
+ *
  * {{{
  *   // within your supervision hierarchy
  *   class Sup extends Actor with ActorLogging {
@@ -48,28 +46,38 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class CtrlD extends Actor with ActorLogging {
   import CtrlD._
 
-  implicit val mat: ActorMaterializer = ActorMaterializer()
-
   override def preStart(): Unit = {
     self ! Initialize
   }
 
-  def receive = LoggingReceive {
+  def receive = notInitialized
+
+  def notInitialized = LoggingReceive.withLabel("notInitialized") {
     case Initialize =>
-      // Ctrl+D sends an EOF and that's when you try to read from StdIn and returns null.
-      // Basically we're setting up the Stream to read from StdIn ignoring all input.
-      // When user hits Ctrl+D the stream completes and we get notified in `Done`.
-      val _ = Source
-        .fromIterator(() => new Scanner(System.in).asScala)
-        .runWith(Sink.ignore)
-        .pipeTo(self)
-
       log.info("Use Ctrl+D to stop.")
-
-    case Done =>
-      context stop self
+      val scanner = new Scanner(System.in)
+      context become waiting(scanner)
+      self ! Wait
   }
 
+  // This actor uses a [[java.util.Scanner]] to listen to StdIn. Once user hits `Ctrl+D` the
+  // stream signals EOF and `scanner.hasNext()` return `false`. Since the operations on
+  // [[java.util.Scanner]] are blocking we need to run those operations on a dedicated thread
+  def waiting(scanner: Scanner) = LoggingReceive.withLabel("waiting") {
+    case Wait =>
+      val _ = IO(scanner.hasNext())
+        .map(HasNext)
+        .pipeTo(self)
+
+    case HasNext(true) =>
+      val _ = IO(scanner.next())
+        .map(_ => Wait)
+        .pipeTo(self)
+
+    case HasNext(false) => context stop self
+  }
+
+  def IO[T](body: => T): Future[T] = Future { blocking { body } }
 }
 
 object CtrlD {
@@ -77,4 +85,8 @@ object CtrlD {
 
   sealed trait Command
   final case object Initialize extends Command
+  final case object Wait       extends Command
+
+  sealed trait Event
+  final case class HasNext(hasNext: Boolean) extends Event
 }
