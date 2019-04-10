@@ -11,6 +11,7 @@ object Main {
 }
 
 import akka.actor._
+import akka.actor.CoordinatedShutdown._
 import akka.event.LoggingReceive
 
 class Supervisor extends Actor with ActorLogging {
@@ -48,7 +49,7 @@ class Supervisor extends Actor with ActorLogging {
 
   def terminate(): Unit = discarding {
     log.info("Shutting down now.")
-    CoordinatedShutdown(context.system).run()
+    CoordinatedShutdown(context.system).run(JvmExitReason)
   }
 
 }

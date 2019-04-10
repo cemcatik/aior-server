@@ -1,5 +1,6 @@
 organization := "com.catikkas"
 name := "aior-server"
+maintainer := "cem.catikkas@gmail.com"
 
 enablePlugins(GitVersioning)
 git.baseVersion := "1.0"
@@ -7,13 +8,14 @@ git.useGitDescribe := true
 
 shellPrompt := ShellPrompt.prompt
 
-scalaVersion := "2.12.2"
+scalaVersion := "2.12.8"
 scalacOptions ++= Seq(
-  "-feature"
+  "-feature",
+  "-deprecation"
 )
 
-def akka(c: String)   = "com.typesafe.akka" %% s"akka-$c"   % "2.5.1"
-def specs2(c: String) = "org.specs2"        %% s"specs2-$c" % "3.8.9"
+def akka(c: String)   = "com.typesafe.akka" %% s"akka-$c"   % "2.5.22"
+def specs2(c: String) = "org.specs2"        %% s"specs2-$c" % "4.3.4"
 
 libraryDependencies ++= Seq(
   akka("actor"),
