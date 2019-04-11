@@ -1,62 +1,66 @@
 package com.catikkas.aiorserver
 
+import akka.actor.CoordinatedShutdown
+import akka.{actor => untyped}
+import akka.actor.CoordinatedShutdown._
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
+import akka.actor.typed.scaladsl.adapter._
+
 object Main {
 
   def main(args: Array[String]): Unit = {
-    import akka.actor._
-    val system = ActorSystem("aior-server")
-    discarding { system.actorOf(Supervisor.props, "sup") }
-  }
-
-}
-
-import akka.actor._
-import akka.actor.CoordinatedShutdown._
-import akka.event.LoggingReceive
-
-class Supervisor extends Actor with ActorLogging {
-  import Supervisor._
-
-  override def preStart(): Unit = {
-    self ! Initialize
-  }
-
-  def receive: Receive = notInitialized
-
-  def notInitialized: Receive = LoggingReceive.withLabel("notInitialized") {
-    case Initialize =>
-      val robot  = context watch context.actorOf(Robot.props, "robot")
-      val server = context watch context.actorOf(Server.props(robot), "server")
-      val ctrld  = context watch context.actorOf(CtrlD.props, "ctrld")
-      context become initialized(robot, server, ctrld)
-  }
-
-  def initialized(
-      robot: ActorRef,
-      server: ActorRef,
-      ctrld: ActorRef
-  ): Receive = LoggingReceive.withLabel("initialized") {
-    case Terminated(`robot`) =>
-      log.error("java.awt.Robot terminated. Please make sure environment is not headless.")
-      terminate()
-
-    case Terminated(`server`) =>
-      log.error("Server failed to bind. Please check config.")
-      terminate()
-
-    case Terminated(`ctrld`) => terminate()
-  }
-
-  def terminate(): Unit = discarding {
-    log.info("Shutting down now.")
-    CoordinatedShutdown(context.system).run(JvmExitReason)
+    val system = untyped.ActorSystem("aior-server")
+    discarding { system.spawn(Supervisor.behavior, "sup") }
   }
 
 }
 
 object Supervisor {
-  def props = Props(new Supervisor)
-
   sealed trait Command
   final case object Initialize extends Command
+
+  val notInitialized: Behavior[Command] = Behaviors.setup { context =>
+    val robot  = context.actorOf(Robot.props, "robot")
+    val server = context.actorOf(Server.props(robot), "server")
+    val ctrld  = context.spawn(CtrlD.behavior, "ctrld")
+
+    Seq(robot, server) foreach { a =>
+      context watch a
+    }
+
+    Seq(ctrld) foreach { a =>
+      context watch a
+    }
+
+    initialized(robot, server, ctrld)
+  }
+
+  def initialized(
+      robot: untyped.ActorRef,
+      server: untyped.ActorRef,
+      ctrld: ActorRef[CtrlD.Command]
+  ): Behavior[Command] =
+    Behaviors.logMessages(Behaviors.receiveSignal {
+      case (ctx, Terminated(r)) if r == robot.toTyped =>
+        ctx.log.error("java.awt.Robot terminated. Please make sure environment is not headless.")
+        terminate(ctx)
+        Behavior.same
+
+      case (ctx, Terminated(s)) if s == server.toTyped =>
+        ctx.log.error("Server failed to bind. Please check config.")
+        terminate(ctx)
+        Behavior.same
+
+      case (ctx, Terminated(`ctrld`)) =>
+        terminate(ctx)
+        Behavior.same
+    })
+
+  def terminate(context: ActorContext[Command]): Unit = {
+    context.log.info("Shutting down now.")
+    discarding { CoordinatedShutdown(context.system.toUntyped).run(JvmExitReason) }
+  }
+
+  val behavior: Behavior[Command] = notInitialized
 }

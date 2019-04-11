@@ -2,12 +2,12 @@ package com.catikkas.aiorserver
 
 import java.util._
 
-import akka.actor._
-import akka.event.LoggingReceive
-import akka.pattern._
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
 
 import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util._
 
 /**
  * Ideally this is for usage within sbt shell.
@@ -43,50 +43,50 @@ import scala.concurrent.ExecutionContext.Implicits.global
  *
  * @see akka.actor.CoordinatedShutdown
  */
-class CtrlD extends Actor with ActorLogging {
-  import CtrlD._
+object CtrlD {
+  sealed trait Command
+  final case object Wait                     extends Command
+  final case class HasNext(hasNext: Boolean) extends Command
 
-  override def preStart(): Unit = {
-    self ! Initialize
-  }
+  def IO[T](body: => T): Future[T] = Future { blocking { body } }
 
-  def receive = notInitialized
-
-  def notInitialized = LoggingReceive.withLabel("notInitialized") {
-    case Initialize =>
-      log.info("Use Ctrl+D to stop.")
-      val scanner = new Scanner(System.in)
-      context become waiting(scanner)
-      self ! Wait
+  val notInitialized: Behavior[Command] = Behaviors.setup { ctx =>
+    ctx.log.info("Use Ctrl+D to stop.")
+    val scanner = new Scanner(System.in)
+    ctx.self ! Wait
+    waiting(scanner)
   }
 
   // This actor uses a [[java.util.Scanner]] to listen to StdIn. Once user hits `Ctrl+D` the
   // stream signals EOF and `scanner.hasNext()` return `false`. Since the operations on
   // [[java.util.Scanner]] are blocking we need to run those operations on a dedicated thread
-  def waiting(scanner: Scanner) = LoggingReceive.withLabel("waiting") {
-    case Wait =>
-      val _ = IO(scanner.hasNext())
-        .map(HasNext)
-        .pipeTo(self)
+  def waiting(scanner: Scanner): Behavior[Command] =
+    Behaviors.logMessages(Behaviors.receivePartial {
+      case (ctx, Wait) =>
+        ctx.pipeToSelf(IO(scanner.hasNext())) {
+          case Success(n) =>
+            HasNext(n)
 
-    case HasNext(true) =>
-      val _ = IO(scanner.next())
-        .map(_ => Wait)
-        .pipeTo(self)
+          case Failure(t) =>
+            ctx.log.error(t, "while scanning next.")
+            HasNext(false)
+        }
+        Behavior.same
 
-    case HasNext(false) => context stop self
-  }
+      case (ctx, HasNext(true)) =>
+        ctx.pipeToSelf(IO(scanner.next())) {
+          case Success(_) =>
+            Wait
 
-  def IO[T](body: => T): Future[T] = Future { blocking { body } }
-}
+          case Failure(t) =>
+            ctx.log.error(t, "while reading next.")
+            Wait
+        }
+        Behavior.same
 
-object CtrlD {
-  def props = Props(new CtrlD)
+      case (_, HasNext(false)) =>
+        Behavior.stopped
+    })
 
-  sealed trait Command
-  final case object Initialize extends Command
-  final case object Wait       extends Command
-
-  sealed trait Event
-  final case class HasNext(hasNext: Boolean) extends Event
+  val behavior: Behavior[Command] = notInitialized
 }
