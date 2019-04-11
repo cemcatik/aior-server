@@ -6,8 +6,9 @@ import akka.actor._
 import akka.event.LoggingReceive
 import akka.io._
 import akka.io.Udp._
+import com.catikkas.aiorserver.Main._
 
-class Server(robot: ActorRef) extends Actor with ActorLogging with Config {
+class Server(config: Config, robot: ActorRef) extends Actor with ActorLogging {
   import Server._
 
   override def preStart(): Unit = {
@@ -65,7 +66,7 @@ class Server(robot: ActorRef) extends Actor with ActorLogging with Config {
 }
 
 object Server {
-  def props(robot: ActorRef) = Props(new Server(robot))
+  def props(config: Config, robot: ActorRef) = Props(new Server(config, robot))
 
   sealed trait Command
   final case object Initialize extends Command

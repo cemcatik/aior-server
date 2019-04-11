@@ -25,6 +25,7 @@ libraryDependencies ++= Seq(
   akka("slf4j"),
   "ch.qos.logback"       % "logback-classic" % "1.2.3",
   "com.google.code.gson" % "gson"            % "2.3.1",
+  "com.iheart"           %% "ficus"          % "1.4.3",
   //
   // Test libraries
   specs2("core")  % Test,
