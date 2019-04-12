@@ -50,43 +50,43 @@ object CtrlD {
 
   def IO[T](body: => T): Future[T] = Future { blocking { body } }
 
-  val notInitialized: Behavior[Command] = Behaviors.setup { ctx =>
-    ctx.log.info("Use Ctrl+D to stop.")
+  def behavior: Behavior[Command] = Behaviors.setup { context =>
+    context.log.info("Use Ctrl+D to stop.")
+    context.self ! Wait
+
     val scanner = new Scanner(System.in)
-    ctx.self ! Wait
-    waiting(scanner)
+
+    // This actor uses a [[java.util.Scanner]] to listen to StdIn. Once user hits `Ctrl+D` the
+    // stream signals EOF and `scanner.hasNext()` return `false`. Since the operations on
+    // [[java.util.Scanner]] are blocking we need to run those operations on a dedicated thread
+    Behaviors.logMessages(
+      Behaviors.receiveMessage {
+        case Wait =>
+          context.pipeToSelf(IO(scanner.hasNext())) {
+            case Success(n) =>
+              HasNext(n)
+
+            case Failure(t) =>
+              context.log.error(t, "while scanning next.")
+              HasNext(false)
+          }
+          Behavior.same
+
+        case HasNext(true) =>
+          context.pipeToSelf(IO(scanner.next())) {
+            case Success(_) =>
+              Wait
+
+            case Failure(t) =>
+              context.log.error(t, "while reading next.")
+              Wait
+          }
+          Behavior.same
+
+        case HasNext(false) =>
+          Behavior.stopped
+      }
+    )
   }
 
-  // This actor uses a [[java.util.Scanner]] to listen to StdIn. Once user hits `Ctrl+D` the
-  // stream signals EOF and `scanner.hasNext()` return `false`. Since the operations on
-  // [[java.util.Scanner]] are blocking we need to run those operations on a dedicated thread
-  def waiting(scanner: Scanner): Behavior[Command] =
-    Behaviors.logMessages(Behaviors.receivePartial {
-      case (ctx, Wait) =>
-        ctx.pipeToSelf(IO(scanner.hasNext())) {
-          case Success(n) =>
-            HasNext(n)
-
-          case Failure(t) =>
-            ctx.log.error(t, "while scanning next.")
-            HasNext(false)
-        }
-        Behavior.same
-
-      case (ctx, HasNext(true)) =>
-        ctx.pipeToSelf(IO(scanner.next())) {
-          case Success(_) =>
-            Wait
-
-          case Failure(t) =>
-            ctx.log.error(t, "while reading next.")
-            Wait
-        }
-        Behavior.same
-
-      case (_, HasNext(false)) =>
-        Behavior.stopped
-    })
-
-  val behavior: Behavior[Command] = notInitialized
 }
