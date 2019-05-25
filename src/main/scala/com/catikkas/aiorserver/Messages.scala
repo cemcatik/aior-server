@@ -80,7 +80,7 @@ object Messages {
       }
 
       bytes.parseJson[KeyboardString] match {
-        case Success(KeyboardString(kbs, KeyboardString.State)) => Some(split(kbs))
+        case Success(KeyboardString(kbs, State)) => Some(split(kbs))
         case _                                                  => None
       }
     }
@@ -90,8 +90,8 @@ object Messages {
     val State = 1
 
     def unapply(bytes: ByteString): Option[Int] = bytes.parseJson[KeyboardInt] match {
-      case Success(KeyboardInt(kbi, KeyboardString.State)) => Some(kbi)
-      case _                                               => None
+      case Success(KeyboardInt(kbi, State)) => Some(kbi)
+      case _                                            => None
     }
   }
 
