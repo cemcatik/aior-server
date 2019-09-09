@@ -2,6 +2,8 @@ organization := "com.catikkas"
 name := "aior-server"
 maintainer := "cem.catikkas@gmail.com"
 
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 enablePlugins(GitVersioning)
 git.baseVersion := "1.0"
 git.useGitDescribe := true
